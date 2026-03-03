@@ -738,6 +738,20 @@ const BASE_HEADERS: Record<string, string> = {
   "Content-Type": "application/json",
 };
 
+// Inject extra HTTP headers (e.g. proxy auth) from environment
+const _rawExtraHeaders = process.env.GITLAB_EXTRA_HTTP_HEADERS;
+if (_rawExtraHeaders) {
+  try {
+    const parsed = JSON.parse(_rawExtraHeaders);
+    for (const [key, value] of Object.entries(parsed)) {
+      BASE_HEADERS[key] = String(value);
+    }
+    logger.info({ keys: Object.keys(parsed) }, "Injected extra HTTP headers from GITLAB_EXTRA_HTTP_HEADERS");
+  } catch (e) {
+    logger.error({ error: e }, "Failed to parse GITLAB_EXTRA_HTTP_HEADERS");
+  }
+}
+
 /**
  * Build authentication headers dynamically based on context
  * In REMOTE_AUTHORIZATION mode, reads from AsyncLocalStorage session context
